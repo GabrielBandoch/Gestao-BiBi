@@ -8,7 +8,6 @@ O **BiBi - Transporte Escolar** é uma plataforma web desenvolvida com o objetiv
 
 #### **Cadastro e Gestão de Alunos**  
 - Registro de alunos com informações como **nome**, **idade**, **responsável**, **contato** e **instituição de ensino**.
-- Associação dos alunos a **rotas específicas**, otimizando a organização.
 
 #### **Comunicação com Responsáveis**  
 - Envio de **alertas e notificações** via **e-mail** ou **WhatsApp** para informar horários de embarque e desembarque.
