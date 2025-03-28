@@ -36,7 +36,7 @@ O **BiBi - Transporte Escolar** será desenvolvido utilizando as seguintes tecno
 - [![SailsJS](https://img.shields.io/badge/SailsJS-000000.svg?style=for-the-badge&logo=sails&logoColor=white)](https://sailsjs.com/)
 - [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-000000.svg?style=for-the-badge&logo=PostgreSQL&logoColor=white)](https://www.postgresql.org/)
 
-### ** Confluence**
+### Confluence
 - [![PAC V](https://img.shields.io/badge/PAC_Quarto_Semestre-000000.svg?style=for-the-badge&logo=Confluence&logoColor=white)](https://pac-quarto-semestre.atlassian.net/wiki/x/5wAB?atlOrigin=eyJpIjoiOGRjMWE5ZjU4NDQyNDUzNTk1M2UxODM3M2JlMDk2ZGMiLCJwIjoiYyJ9)
 
 
