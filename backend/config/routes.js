@@ -20,6 +20,9 @@ module.exports.routes = {
   ***************************************************************************/
 
   '/': { view: 'pages/homepage' },
+  'POST /relatorio/assinar': 'RelatorioController.assinar',
+  'POST /relatorio/verificar': 'RelatorioController.verificarAssinatura',
+  'GET /relatorio/baixar/:mongoId': 'RelatorioController.baixar',
 
 
   /***************************************************************************
