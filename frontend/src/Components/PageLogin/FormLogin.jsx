@@ -4,8 +4,7 @@ import { motion} from "framer-motion";
 import { Link } from 'react-router-dom';
 
 /* Imports */
-import InputSenha from "./inputSenha";
-import useValidaEmail from "../../hooks/useValidaEmail"
+import InputSenha from "../PageCadastro/inputSenha";
 
 /* Icons */
 import { FcGoogle } from "react-icons/fc";
@@ -31,37 +30,19 @@ const InputAnimado = ({ children, delay = 0 }) => {
   );
 };
 
-export default function InfoLogin({ form, setForm, setEtapa }) {
-  const { email, setEmail, invalido: emailInvalido, validarEmail } = useValidaEmail();
+export default function FormLogin({ form, setForm, setEtapa }) {
   const [erroGeral, setErroGeral] = useState("");
 
   const [senhaInvalida, setSenhaInvalida] = useState(false);
-  const [senhasDiferentes, setSenhasDiferentes] = useState(false);
 
   const [camposTocados, setCamposTocados] = useState({
     email: false,
     senha: false,
-    confirmarSenha: false
   });
 
   /* Função que altera os inputs do form */
   const handleChange = (e) => {
     const {name, value} = e.target;
-
-    if (name === "email") {
-      setEmail(value);
-    }
-
-    if (name === "senha") {
-      const valida = validarSenhaForte(value);
-      setSenhaInvalida(!valida);
-    }
-
-    if (name === "confirmarSenha") {
-      setSenhasDiferentes(value !== form.senha);
-    } else if (name === "senha") {
-      setSenhasDiferentes(form.confirmarSenha && value !== form.confirmarSenha);
-    }
 
     setForm((prev) => ({
       ...prev,
@@ -69,69 +50,21 @@ export default function InfoLogin({ form, setForm, setEtapa }) {
     }));
   }
 
-  /* Função para validar se a senha é forte */
-  const validarSenhaForte = (senha) => {
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-    return regex.test(senha);
-  };
-
-  /* Função para evitar problema de messagem de erro constante enquanto escreve */
-  const handleBlur = (e) => {
-    const { name } = e.target;
-    setCamposTocados((prev) => ({
-      ...prev,
-      [name]: true,
-    }));
-
-    if (name === "email") {
-      validarEmail(email); // ✅ agora sim!
-    }
-    if (name === "senha") {
-      const valida = validarSenhaForte(form.senha);
-      setSenhaInvalida(!valida);
-    }
-    if (name === "confirmarSenha") {
-      const diferentes = form.confirmarSenha !== form.senha;
-      setSenhasDiferentes(diferentes);
-    }
-  };
-
   /* Função que verifica se todos os campos foram preenchidos e finaliza etapa */
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    const emailValido = validarEmail(email);
-    const senhaValida = validarSenhaForte(form.senha);
-    const confirmacaoOk = form.senha === form.confirmarSenha;
 
     const camposVazios = !email.trim() || !form.senha.trim() || !form.confirmarSenha.trim();
 
     setCamposTocados({
       email: true,
       senha: true,
-      confirmarSenha: true
     });
 
     if (camposVazios) {
       setErroGeral("Preencha todos os campos.");
       return;
     }
-
-    if (!emailValido) {
-      setErroGeral("Digite um email válido.");
-      return;
-    }
-
-    if (!senhaValida) {
-      setErroGeral("A senha não atende aos requisitos.");
-      return;
-    }
-
-    if (!confirmacaoOk) {
-      setErroGeral("As senhas não coincidem.");
-      return;
-    }
-
     // Se tudo ok, limpa erro e avança
     setErroGeral("");
     setEtapa(1);
@@ -143,7 +76,7 @@ export default function InfoLogin({ form, setForm, setEtapa }) {
         <InputAnimado delay={0.1}>
           <div className="select-none">
             <p className="text-[14px] font-light select-none m-1">Email</p>
-            <input type="text" name="email" value={form.email} onChange={handleChange} onBlur={handleBlur} placeholder="exemplo@email.com" className={`
+            <input type="text" name="email" value={form.email} onChange={handleChange} placeholder="exemplo@email.com" className={`
             w-full max-w-90
             py-3 px-5
             text-sm text-[#252525]
@@ -171,26 +104,10 @@ export default function InfoLogin({ form, setForm, setEtapa }) {
           inputKey="senha"
           value={form.senha}
           onChange={handleChange}
-          onBlur={handleBlur}
-          error={camposTocados.senha && senhaInvalida && form.senha.trim() !== ""}
+          error={camposTocados.senha && form.senha.trim() !== ""}
           errorMessage="A senha deve ter pelo menos 8 caracteres, com letra maiúscula, minúscula, número e símbolo."
           />
         </InputAnimado>
-
-        {/* Container Confirmar Senha */} 
-        <InputAnimado delay={0.3}>
-          <InputSenha 
-          label="Confirmar Senha"
-          placeholder="Confirme sua Senha"
-          inputKey="confirmarSenha"
-          value={form.confirmarSenha}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={camposTocados.confirmarSenha && senhasDiferentes && form.confirmarSenha.trim() !== ""}
-          errorMessage="As senhas não coincidem."
-          />
-        </InputAnimado>
-
 
         {/* Mensagem de erro se algum campo no foi preenchido */} 
         {erroGeral && (
@@ -202,7 +119,7 @@ export default function InfoLogin({ form, setForm, setEtapa }) {
         )}
 
         <div className="">
-          {/* Botão de envio ou próximos passos */}
+          {/* Botão para fazer login */}
           <motion.button
           key={form.role}
           type="submit"
@@ -243,7 +160,7 @@ export default function InfoLogin({ form, setForm, setEtapa }) {
             <p className="text-[#0077FF] font-semibold text-1xl">Continuar com o Google</p>
           </motion.button>
 
-          {/* Botão de redirecionamento para o login */}
+          {/* Botão de redirecionamento para o cadastro */}
           <motion.button
           type="submit"
           initial={{ opacity: 0, x: -50 }}
@@ -254,8 +171,8 @@ export default function InfoLogin({ form, setForm, setEtapa }) {
               delay: 0.6
           }}
           className="w-full max-w-90 mt-1 flex space-x-1 font-light text-[14px] flex justify-end select-none">
-            <p>Já tem uma conta?</p>
-            <Link to={"/login"} className="inline-block font-semibold text-[rgba(3,105,161,1)] transition-transform transform hover:scale-110">Log in</Link>
+            <p>Não tem uma conta?</p>
+            <Link to={"/login"} className="inline-block font-semibold text-[rgba(3,105,161,1)] transition-transform transform hover:scale-110">Registrar</Link>
           </motion.button>
         </div>
     </form>
