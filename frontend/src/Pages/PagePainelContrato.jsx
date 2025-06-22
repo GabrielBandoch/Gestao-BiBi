@@ -15,7 +15,7 @@ export default function PagePainelContrato() {
     nome: "Daniela Luísa",
     email: "daniela@email.com",
     foto: fotoPerfil,
-    role: "condutor",
+    role: "responsavel",
   })
   const [funcao, setFuncao] = useState("Contratos")
   return (
