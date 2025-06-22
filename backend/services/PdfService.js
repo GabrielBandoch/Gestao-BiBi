@@ -38,7 +38,7 @@ module.exports = {
     const hashAtual = crypto.createHash('sha256').update(conteudo).digest('hex');
     return { valido: hashOriginal === hashAtual, hash: hashAtual };
   },
-  
+
   assinarPorResponsavel: async (buffer, assinatura) => {
     const pdfDoc = await PDFDocument.load(buffer);
     const pages = pdfDoc.getPages();

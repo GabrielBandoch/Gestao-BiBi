@@ -1,7 +1,6 @@
 const { MongoClient, GridFSBucket, ObjectId } = require('mongodb');
-
-const url = 'mongodb://localhost:27017';
-const dbName = 'gestao-relatorios';
+const url = process.env.MONGO_URL;
+const dbName = process.env.MONGO_DB || 'gestao-relatorios';
 
 module.exports = {
   salvarPdf: async (buffer, filename) => {

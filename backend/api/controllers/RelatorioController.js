@@ -45,17 +45,17 @@ module.exports = {
   },
 
   baixar: async function (req, res) {
-  try {
-    const { mongoId } = req.params;
-    const buffer = await MongoService.buscarPdf(mongoId);
+    try {
+      const { mongoId } = req.params;
+      const buffer = await MongoService.buscarPdf(mongoId);
 
-    res.set('Content-Type', 'application/pdf');
-    res.set('Content-Disposition', `attachment; filename="relatorio-${mongoId}.pdf"`);
-    return res.send(buffer);
-  } catch (err) {
-    console.error(err);
-    return res.serverError('Erro ao baixar PDF.');
+      res.set('Content-Type', 'application/pdf');
+      res.set('Content-Disposition', `attachment; filename="relatorio-${mongoId}.pdf"`);
+      return res.send(buffer);
+    } catch (err) {
+      console.error(err);
+      return res.serverError('Erro ao baixar PDF.');
+    }
   }
-}
 
 };
