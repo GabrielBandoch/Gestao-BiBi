@@ -10,7 +10,7 @@
 //     },
 //     nome: { type: 'string' },
 //     email: { type: 'string' },
-    
+
 //     createdAt: {
 //       type: 'ref', 
 //       columnType: 'timestamp without time zone',
@@ -52,6 +52,7 @@ module.exports = {
     senha: {
       type: 'string',
       required: true,
+      columnType: 'varchar(255)',
       protect: true // evita retornar no .toJSON()
     },
 

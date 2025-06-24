@@ -18,12 +18,10 @@ module.exports = {
         return res.status(400).json({ erro: 'E-mail já cadastrado.' });
       }
 
-      const senhaCriptografada = await bcrypt.hash(senha, 10);
-
       const novoUsuario = await User.create({
         nome,
         email,
-        senha: senhaCriptografada,
+        senha,
         cpf,
         celular,
         codigoPais,
@@ -45,29 +43,31 @@ module.exports = {
   login: async (req, res) => {
     try {
       const { email, senha } = req.body;
-      console.log('📥 Tentativa de login com:', req.body);
+
+      console.log('📩 Email recebido:', email);
+      console.log('🔑 Senha recebida:', senha);
 
       if (!email || !senha) {
         return res.status(400).json({ erro: 'E-mail e senha são obrigatórios.' });
       }
 
       const usuario = await User.findOne({ email });
-      console.log('🔍 Usuário encontrado:', usuario);
+      console.log('👤 Usuário encontrado:', usuario);
 
       if (!usuario) {
         return res.status(401).json({ erro: 'Usuário não encontrado.' });
       }
 
-      console.log('🔐 Comparando senha:', senha, 'com hash:', usuario.senha);
+      console.log('🔒 Hash no banco:', usuario.senha);
+
       const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
-      console.log('✅ Resultado da comparação:', senhaCorreta);
+      console.log('✅ Resultado bcrypt.compare:', senhaCorreta);
 
       if (!senhaCorreta) {
         return res.status(401).json({ erro: 'Senha incorreta.' });
       }
 
       const token = jwt.sign({ id: usuario.id, email: usuario.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
-      console.log('🎫 Token gerado:', token);
 
       return res.json({
         mensagem: 'Login realizado com sucesso!',
@@ -80,11 +80,12 @@ module.exports = {
         }
       });
     } catch (err) {
-      console.error('❌ Erro no login:', err.message);
+      console.error('💥 Erro interno no login:', err);
       return res.status(500).json({ erro: 'Erro no login', detalhes: err.message });
     }
   },
-  
+
+
   me: async (req, res) => {
     try {
       const usuario = await User.findOne({ id: req.usuario.id }).omit(['senha']); // <-- CORRIGIDO

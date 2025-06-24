@@ -180,22 +180,18 @@
 //   );
 // }
 
-/* Dependencias */
+
+// separação
+
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from 'react-router-dom';
-import { loginUser } from '../../services/userServices'; 
-
-/* Imports */
+import { Link, useNavigate } from 'react-router-dom'; 
+import { loginUser } from '../../services/userServices';
 import InputSenha from "../PageCadastro/inputSenha";
-
-/* Icons */
 import { FcGoogle } from "react-icons/fc";
 
-/* Funções arquivo */
 const InputAnimado = ({ children, delay = 0 }) => {
   const [animou, setAnimou] = useState(false);
-
   return (
     <motion.div
       initial={!animou ? { opacity: 0, y: -10 } : false}
@@ -219,6 +215,8 @@ export default function FormLogin({ form, setForm, setEtapa }) {
     email: false,
     senha: false,
   });
+
+  const navigate = useNavigate(); 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -250,9 +248,11 @@ export default function FormLogin({ form, setForm, setEtapa }) {
       });
 
       console.log("✅ Login realizado:", dados);
-      setEtapa(1); // Avança etapa após login com sucesso
+
+      // ✅ Redirecionar após login com sucesso
+      navigate("/painel/contrato");
     } catch (error) {
-      console.error("❌ Erro no login:", error.message);
+      console.error("Erro no login:", error.message);
       setErroGeral(error.message || "Erro ao fazer login.");
     }
   };
@@ -269,21 +269,12 @@ export default function FormLogin({ form, setForm, setEtapa }) {
             value={form.email}
             onChange={handleChange}
             placeholder="exemplo@email.com"
-            className={`
-              w-full max-w-90
-              py-3 px-5
-              text-sm text-[#252525]
-              placeholder-[#98A2B3]
-              appearance-none bg-transparent outline-none 
-              border-1 border-[#D0D5DD] rounded-lg
-              focus:border-[#BAE6FD] focus:bg-[rgba(186,230,253,0.10)] focus:placeholder-transparent
-              transition-all duration-200 ease-in-out
-            `}
+            className="w-full max-w-90 py-3 px-5 text-sm text-[#252525] placeholder-[#98A2B3] appearance-none bg-transparent outline-none border-1 border-[#D0D5DD] rounded-lg focus:border-[#BAE6FD] focus:bg-[rgba(186,230,253,0.10)] focus:placeholder-transparent transition-all duration-200 ease-in-out"
           />
         </div>
       </InputAnimado>
 
-      {/* Container Senha */}
+      {/* Senha */}
       <InputAnimado delay={0.2}>
         <InputSenha
           label="Senha"
@@ -296,7 +287,7 @@ export default function FormLogin({ form, setForm, setEtapa }) {
         />
       </InputAnimado>
 
-      {/* Mensagem de erro */}
+      {/* Erro geral */}
       {erroGeral && (
         <InputAnimado delay={0}>
           <div className="text-red-500 text-sm font-medium text-center mt-3 select-none">
@@ -317,22 +308,12 @@ export default function FormLogin({ form, setForm, setEtapa }) {
             ease: "easeOut",
             delay: 0.4
           }}
-          className="
-            w-full max-w-90 
-            bg-[rgba(3,105,161,0.9)]
-            py-2 mt-5
-            text-white text-xl font-semibold
-            rounded-lg
-            cursor-pointer
-            hover:bg-[rgba(3,105,161,1)] hover:scale-102
-            transition-all duration-300 ease-in-out
-            select-none
-          "
+          className="w-full max-w-90 bg-[rgba(3,105,161,0.9)] py-2 mt-5 text-white text-xl font-semibold rounded-lg cursor-pointer hover:bg-[rgba(3,105,161,1)] hover:scale-102 transition-all duration-300 ease-in-out select-none"
         >
           Avançar Etapa
         </motion.button>
 
-        {/* Botão Google */}
+        {/* Google Login */}
         <motion.button
           type="button"
           initial={{ opacity: 0, x: 50 }}
@@ -348,7 +329,6 @@ export default function FormLogin({ form, setForm, setEtapa }) {
           <p className="text-[#0077FF] font-semibold text-1xl">Continuar com o Google</p>
         </motion.button>
 
-        {/* Link para registro */}
         <motion.button
           type="button"
           initial={{ opacity: 0, x: -50 }}
@@ -358,10 +338,12 @@ export default function FormLogin({ form, setForm, setEtapa }) {
             ease: "easeOut",
             delay: 0.6
           }}
-          className="w-full max-w-90 mt-1 flex space-x-1 font-light text-[14px] flex justify-end select-none"
+          className="w-full max-w-90 mt-1 flex space-x-1 font-light text-[14px] justify-end select-none"
         >
           <p>Não tem uma conta?</p>
-          <Link to={"/login"} className="inline-block font-semibold text-[rgba(3,105,161,1)] transition-transform transform hover:scale-110">Registrar</Link>
+          <Link to="/cadastro" className="inline-block font-semibold text-[rgba(3,105,161,1)] transition-transform transform hover:scale-110">
+            Registrar
+          </Link>
         </motion.button>
       </div>
     </form>
