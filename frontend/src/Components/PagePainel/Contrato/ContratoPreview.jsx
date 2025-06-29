@@ -30,7 +30,7 @@ export default function ContratoPreview({ contrato }) {
                     </div>
 
                     <div className="space-y-2">
-                        {contrato.Alunos.map((aluno, index) => (
+                       {Array.isArray(contrato.Alunos) && contrato.Alunos.map((aluno, index) => (
                         <div key={index} className="flex space-x-3">
                             <div className="flex space-x-1 relative">
                                 <p className="font-semibold">ALUNO:</p>
@@ -48,12 +48,12 @@ export default function ContratoPreview({ contrato }) {
                         <div className="flex space-x-3">
                             <div className="flex space-x-1 relative">
                                 <p className="font-semibold">ENDEREÇO:</p>
-                                <p className="absolute bottom-0.5 left-25 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado[0].endereco}</p>
+                                <p className="absolute bottom-0.5 left-25 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado?.[0]?.endereco}</p>
                                 <p>________________________________</p>
                             </div>
                             <div className="flex space-x-1 relative">
                                 <p className="font-semibold">Nº:</p>
-                                <p className="absolute bottom-0.5 left-15 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado[0].numeroCasa}</p>
+                                <p className="absolute bottom-0.5 left-15 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado?.[0]?.numeroCasa}</p>
                                 <p>_______________</p>
                             </div>
                         </div>
@@ -61,12 +61,12 @@ export default function ContratoPreview({ contrato }) {
                         <div className="flex space-x-3">
                             <div className="flex space-x-1 relative">
                                 <p className="font-semibold">BAIRRO:</p>
-                                <p className="absolute bottom-0.5 left-18 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado[0].bairro}</p>
+                                <p className="absolute bottom-0.5 left-18 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado?.[0]?.bairro}</p>
                                 <p>________________________________</p>
                             </div>
                             <div className="flex space-x-1 relative">
                                 <p className="font-semibold">CEP:</p>
-                                <p className="absolute bottom-0.5 left-12 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado[0].cep}</p>
+                                <p className="absolute bottom-0.5 left-12 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado?.[0]?.cep}</p>
                                 <p>_______________</p>
                             </div>
                         </div>
@@ -76,12 +76,12 @@ export default function ContratoPreview({ contrato }) {
                         <div className="flex space-x-3">
                             <div className="flex space-x-1 relative">
                                 <p className="font-semibold">RESPONSÁVEL:</p>
-                                <p className="absolute bottom-0.5 left-32 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado[0].nome}</p>
+                                <p className="absolute bottom-0.5 left-32 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado?.[0]?.nome}</p>
                                 <p>________________________________</p>
                             </div>
                             <div className="flex space-x-1 relative">
                                 <p className="font-semibold">TELEFONE:</p>
-                                <p className="absolute bottom-0.5 left-23 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado[0].telefone}</p>
+                                <p className="absolute bottom-0.5 left-23 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado?.[0]?.telefone}</p>
                                 <p>________________________________</p>
                             </div>
                         </div>
@@ -89,12 +89,12 @@ export default function ContratoPreview({ contrato }) {
                         <div className="flex space-x-3">
                             <div className="flex space-x-1 relative">
                                 <p className="font-semibold">CPF:</p>
-                                <p className="absolute bottom-0.5 left-12 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado[0].cpf}</p>
+                                <p className="absolute bottom-0.5 left-12 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado?.[0]?.cpf}</p>
                                 <p>________________________________</p>
                             </div>
                             <div className="flex space-x-1 relative">
                                 <p className="font-semibold">RG:</p>
-                                <p className="absolute bottom-0.5 left-10 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado[0].rg}</p>
+                                <p className="absolute bottom-0.5 left-10 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado?.[0]?.rg}</p>
                                 <p>________________________________</p>
                             </div>
                         </div>
@@ -105,12 +105,12 @@ export default function ContratoPreview({ contrato }) {
                         <div className="flex space-x-3">
                             <div className="flex space-x-1 relative">
                                 <p className="font-semibold">ESCOLA:</p>
-                                <p className="absolute bottom-0.5 left-20 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.Alunos[0].nomeEscola}</p>
+                                {/* <p className="absolute bottom-0.5 left-20 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.Alunos[0].nomeEscola}</p> */}
                                 <p>________________________________</p>
                             </div>
                             <div className="flex space-x-1 relative">
                                 <p className="font-semibold">SÉRIE:</p>
-                                <p className="absolute bottom-0.5 left-14 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.Alunos[0].serie}</p>
+                                {/* <p className="absolute bottom-0.5 left-14 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.Alunos[0].serie}</p> */}
                                 <p>________________________________</p>
                             </div>
                         </div>
@@ -211,7 +211,7 @@ export default function ContratoPreview({ contrato }) {
                     <p><span className="font-semibold">CLAUSULA SETIMA</span> – DA DECLARAÇÃO DE VONTADE: Todas as partes expressamente ter pleno      conhecimento das cláusulas e condições do presente termo estando de acordo com tudo que nele consta, prometendo contra o mesmo jamais alegar qualquer lesão de direito;</p>
                     <p><span className="font-semibold">CLAUSULA OITAVA</span> – DO FORO: Fica eleito o foro da Comarca de Joinville para dirimir eventuais questões judiciais, abdicando-se as partes de qualquer outro por mais especial que seja.</p>
                     <p>E por estarem justos e contratados, firmam o presente, em duas vias perante as testemunhas que subscrevem.</p>
-                    <p>Joinville, <span className="font-semibold">{contrato.data[0].dia}</span> de <span className="font-semibold">{contrato.data[0].mes}</span> de <span className="font-semibold">{contrato.data[0].ano}</span></p>
+                    <p>Joinville, <span className="font-semibold">{contrato.data?.[0]?.dia}</span> de <span className="font-semibold">{contrato.data?.[0]?.mes}</span> de <span className="font-semibold">{contrato.data?.[0]?.ano}</span></p>
                     <div className="flex justify-between mt-10">
                         <div className="flex flex-col justify-center items-center relative">
                             <p className="absolute bottom-7 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.nomeCondutor}</p>
@@ -220,7 +220,7 @@ export default function ContratoPreview({ contrato }) {
                         </div>
                         <div className="flex flex-col justify-center items-center relative">
                             {contrato.assinado === true && (
-                                <p className="absolute bottom-7 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado[0].nome}</p>
+                                <p className="absolute bottom-7 italic font-light text-lg text-[rgb(0,55,85)]">{contrato.contratado?.[0]?.nome}</p>
                             )}
                             <p>_________________________________</p>
                             <p>Assinatura do Contratado</p>
@@ -249,3 +249,4 @@ export default function ContratoPreview({ contrato }) {
     </div>
   );
 }
+ 

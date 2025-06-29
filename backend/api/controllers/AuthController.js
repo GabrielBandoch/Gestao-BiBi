@@ -53,6 +53,7 @@ module.exports = {
 
       return res.json(usuario);
     } catch (err) {
+      console.error('💥 Erro no /auth/me:', err);
       return res.status(500).json({ erro: 'Erro ao buscar usuário.', detalhes: err.message });
     }
   }

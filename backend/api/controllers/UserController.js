@@ -5,15 +5,54 @@ const User = sails.models.user;
 
 module.exports = {
 
-  // ...
+  // // ...
+
+  // register: async (req, res) => {
+  //   try {
+  //     const { nome, email, senha, confirmarSenha, cpf, celular, codigoPais, role } = req.body;
+
+  //     // ... (resto igual)
+
+  //     const existente = await User.findOne({ email }); // <-- User
+  //     if (existente) {
+  //       return res.status(400).json({ erro: 'E-mail já cadastrado.' });
+  //     }
+
+  //     const novoUsuario = await User.create({
+  //       nome,
+  //       email,
+  //       senha,
+  //       cpf,
+  //       celular,
+  //       codigoPais,
+  //       role
+  //     }).fetch();
+
+  //     return res.status(201).json({
+  //       mensagem: 'Usuário cadastrado com sucesso!',
+  //       usuario: { id: novoUsuario.id, email: novoUsuario.email }
+  //     });
+  //   } catch (err) {
+  //     return res.status(500).json({
+  //       erro: 'Erro no cadastro',
+  //       detalhes: err.message
+  //     });
+  //   }
+  // },
 
   register: async (req, res) => {
     try {
       const { nome, email, senha, confirmarSenha, cpf, celular, codigoPais, role } = req.body;
 
-      // ... (resto igual)
+      if (!nome || !email || !senha || !confirmarSenha || !cpf || !celular || !role) {
+        return res.status(400).json({ erro: 'Todos os campos são obrigatórios.' });
+      }
 
-      const existente = await User.findOne({ email }); // <-- User
+      if (senha !== confirmarSenha) {
+        return res.status(400).json({ erro: 'As senhas não coincidem.' });
+      }
+
+      const existente = await User.findOne({ email });
       if (existente) {
         return res.status(400).json({ erro: 'E-mail já cadastrado.' });
       }
@@ -30,7 +69,12 @@ module.exports = {
 
       return res.status(201).json({
         mensagem: 'Usuário cadastrado com sucesso!',
-        usuario: { id: novoUsuario.id, email: novoUsuario.email }
+        usuario: {
+          id: novoUsuario.id,
+          nome: novoUsuario.nome,
+          email: novoUsuario.email,
+          role: novoUsuario.role
+        }
       });
     } catch (err) {
       return res.status(500).json({
@@ -44,8 +88,6 @@ module.exports = {
     try {
       const { email, senha } = req.body;
 
-      console.log('📩 Email recebido:', email);
-      console.log('🔑 Senha recebida:', senha);
 
       if (!email || !senha) {
         return res.status(400).json({ erro: 'E-mail e senha são obrigatórios.' });
@@ -85,9 +127,18 @@ module.exports = {
     }
   },
 
+  listarResponsaveis: async (req, res) => {
+    try {
+      const responsaveis = await User.find({ role: 'responsavel' });
+      return res.json(responsaveis);
+    } catch (err) {
+      return res.status(500).json({ erro: 'Erro ao buscar responsáveis' });
+    }
+  },
 
   me: async (req, res) => {
     try {
+
       const usuario = await User.findOne({ id: req.usuario.id }).omit(['senha']); // <-- CORRIGIDO
       if (!usuario) {
         return res.status(404).json({ erro: 'Usuário não encontrado.' });
@@ -95,6 +146,8 @@ module.exports = {
 
       return res.json(usuario);
     } catch (err) {
+      console.error('💥 Erro no /auth/me:', err);
+
       return res.status(500).json({ erro: 'Erro ao buscar usuário.', detalhes: err.message });
     }
   },
