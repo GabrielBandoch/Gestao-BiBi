@@ -197,7 +197,10 @@ module.exports = {
             status: "aguardando_assinatura_do_motorista",
             pdfId: novoPdfId,
             dataAssinaturaResponsavel: new Date(),
-            contrato: contratoAtualizado 
+            contrato: {
+              ...contratoAtualizado,
+              nomeResponsavel
+            }
           }
         }
       );
