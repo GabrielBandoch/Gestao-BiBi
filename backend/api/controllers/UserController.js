@@ -5,41 +5,6 @@ const User = sails.models.user;
 
 module.exports = {
 
-  // // ...
-
-  // register: async (req, res) => {
-  //   try {
-  //     const { nome, email, senha, confirmarSenha, cpf, celular, codigoPais, role } = req.body;
-
-  //     // ... (resto igual)
-
-  //     const existente = await User.findOne({ email }); // <-- User
-  //     if (existente) {
-  //       return res.status(400).json({ erro: 'E-mail já cadastrado.' });
-  //     }
-
-  //     const novoUsuario = await User.create({
-  //       nome,
-  //       email,
-  //       senha,
-  //       cpf,
-  //       celular,
-  //       codigoPais,
-  //       role
-  //     }).fetch();
-
-  //     return res.status(201).json({
-  //       mensagem: 'Usuário cadastrado com sucesso!',
-  //       usuario: { id: novoUsuario.id, email: novoUsuario.email }
-  //     });
-  //   } catch (err) {
-  //     return res.status(500).json({
-  //       erro: 'Erro no cadastro',
-  //       detalhes: err.message
-  //     });
-  //   }
-  // },
-
   register: async (req, res) => {
     try {
       const { nome, email, senha, confirmarSenha, cpf, celular, codigoPais, role } = req.body;

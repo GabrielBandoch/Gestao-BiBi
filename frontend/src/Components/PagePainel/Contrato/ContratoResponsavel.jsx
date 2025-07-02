@@ -136,15 +136,18 @@ export default function ContratoResponsavel({ responsavelId }) {
   const [contratos, setContratos] = useState([]);
   const [contrato, setContrato] = useState(null);
   const [assinaturaNome, setAssinaturaNome] = useState("");
-
-  // Buscar contratos pendentes ao carregar
   useEffect(() => {
     async function fetchContratos() {
       try {
-        const res = await axios.get("http://localhost:1337/contratos", {
+        const token = localStorage.getItem('token'); // ou sessionStorage
+
+        const res = await axios.get("http://localhost:1337/contrato/listar", {
           params: {
             responsavelId,
             status: "enviado_para_responsavel",
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -162,6 +165,7 @@ export default function ContratoResponsavel({ responsavelId }) {
     fetchContratos();
   }, [responsavelId]);
 
+
   const assinarContrato = async () => {
     if (!assinaturaNome || !contrato?._id) {
       alert("Preencha o nome antes de assinar.");
@@ -169,14 +173,28 @@ export default function ContratoResponsavel({ responsavelId }) {
     }
 
     try {
-      await axios.post(`http://localhost:1337/relatorio/assinarResponsavel`, {
-        contratoId: contrato._id,
-        nomeResponsavel: assinaturaNome,
-      });
-          
+      const token = localStorage.getItem("token"); // ou sessionStorage se preferir
+
+      await axios.post(
+        `http://localhost:1337/relatorio/assinarResponsavel`,
+        {
+          contratoId: contrato._id,
+          nomeResponsavel: assinaturaNome,
+          contratoAtualizado: {
+            ...contrato.contrato,
+            assinaturaResponsavel: assinaturaNome,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       alert("Contrato assinado com sucesso!");
 
-      // Atualiza a lista de contratos ou remove o contrato da tela
+      // Remove da tela
       setContrato(null);
       setContratos((prev) => prev.filter((c) => c._id !== contrato._id));
     } catch (err) {
@@ -228,7 +246,7 @@ export default function ContratoResponsavel({ responsavelId }) {
             </button>
           </div>
 
-            <ContratoPreview contrato={contrato.contrato} />
+          <ContratoPreview contrato={contrato.contrato} />
         </div>
       </div>
 
@@ -236,4 +254,3 @@ export default function ContratoResponsavel({ responsavelId }) {
     </section>
   );
 }
- 

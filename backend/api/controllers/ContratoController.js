@@ -7,10 +7,11 @@ module.exports = {
     try {
       const client = await MongoClient.connect(url);
       const db = client.db(dbName);
-
-      const { responsavelId, status } = req.query;
+      
+      const { responsavelId, motoristaId, status } = req.query;
       const query = {};
       if (responsavelId) query.responsavelId = responsavelId;
+      if (motoristaId) query.motoristaId = motoristaId;
       if (status) query.status = status;
 
       const contratos = await db.collection('contratos')

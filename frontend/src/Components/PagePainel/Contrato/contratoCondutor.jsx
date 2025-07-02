@@ -295,206 +295,526 @@
 //     );
 // }
 
-// VERSÃO COM A PARTE DE BUSCA DE CONTRATOS IMPLEMENTADA (FALTANDO TESTAR)
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+// // VERSÃO COM A PARTE DE BUSCA DE CONTRATOS IMPLEMENTADA (FALTANDO TESTAR)
+// import { useState, useEffect } from "react";
+// import axios from "axios";
+
+// /* Imports */
+// import ContratoPreview from "./contratoPreview";
+// import InfoContrato from "./infoContrato";
+// import { getResponsaveis } from "../../../services/responsavelServices";
+
+// export default function ContratoCondutor() {
+//     const [contrato, setContrato] = useState(null);
+//     const [mongoId, setMongoId] = useState(null);
+
+//     const [responsaveis, setResponsaveis] = useState([]);
+//     const [responsavelSelecionado, setResponsavelSelecionado] = useState(null);
+
+//     const [contratosResponsavel, setContratosResponsavel] = useState([]);
+//     const [statusFiltro, setStatusFiltro] = useState(""); // PARA CASO QUEIRA FAZER CONSULTA POR FILTRO SEPARADA
+
+//     useEffect(() => {
+//         getResponsaveis()
+//             .then(setResponsaveis)
+//             .catch((err) => console.error("Erro ao buscar responsáveis:", err));
+//     }, []);
+
+//     const buscarContratosResponsavel = async (id, status = "") => {
+//         try {
+//             const params = { responsavelId: id };
+//             if (status) params.status = status;
+
+//             const response = await axios.get("http://localhost:1337/contrato/listar", { params });
+//             setContratosResponsavel(response.data);
+//         } catch (err) {
+//             console.error("Erro ao buscar contratos:", err);
+//         }
+//     };
+
+//     const handleSelecionarResponsavel = (e) => {
+//         const id = e.target.value;
+//         setResponsavelSelecionado(id);
+
+//         const responsavel = responsaveis.find((r) => r.id == id);
+//         if (!responsavel) return;
+
+//         buscarContratosResponsavel(id);
+
+//         const novoContrato = {
+//             nomeCondutor: "",
+//             contratado: [
+//                 {
+//                     nome: responsavel.nome,
+//                     endereco: responsavel.endereco || "",
+//                     numeroCasa: responsavel.numeroCasa || "",
+//                     bairro: responsavel.bairro || "",
+//                     cep: responsavel.cep || "",
+//                     cpf: responsavel.cpf || "",
+//                     rg: responsavel.rg || "",
+//                     telefone: responsavel.celular || "",
+//                 },
+//             ],
+//             assinado: false,
+//             tipoTrajeto: 1,
+//             formaPagamento: "",
+//             valorTotal: "",
+//             numeroParcelas: "",
+//             valorParcela: "",
+//             dataPagamento: "",
+//             data: [
+//                 {
+//                     dia: null,
+//                     mes: "",
+//                     ano: null,
+//                 },
+//             ],
+//             Alunos: [],
+//         };
+
+//         setContrato(novoContrato);
+//     };
+
+//     const enviarContratoEmail = async () => {
+//         if (!contrato || !responsavelSelecionado) return alert("Preencha o contrato e selecione um responsável.");
+
+//         try {
+//             const response = await axios.post("http://localhost:1337/relatorio/enviar-email", {
+//                 contrato,
+//                 idResponsavel: responsavelSelecionado
+//             });
+
+//             setMongoId(response.data.mongoId);
+//             alert("Contrato enviado por e-mail com sucesso!");
+//         } catch (err) {
+//             console.error(err);
+//             alert("Erro ao enviar contrato por e-mail.");
+//         }
+//     };
+
+//     const baixarPdf = () => {
+//         if (!mongoId) return;
+//         window.open(`http://localhost:1337/relatorio/baixar/${mongoId}`, "_blank");
+//     };
+
+//     const renderContratosListados = () => {
+//         if (!contratosResponsavel.length) return null;
+
+//         return (
+//             <div className="my-6 w-full max-w-3xl mx-auto">
+//                 <h3 className="text-xl font-bold mb-3 text-gray-800">Contratos existentes deste responsável:</h3>
+//                 <ul className="space-y-3">
+//                     {contratosResponsavel.map((c) => (
+//                         <li key={c._id} className="border rounded p-4 shadow-sm bg-white">
+//                             <p><strong>Status:</strong> {c.status || "Sem status"}</p>
+//                             <p><strong>Criado em:</strong> {new Date(c.dataCriacao).toLocaleDateString()}</p>
+//                             {c.valorTotal && <p><strong>Valor Total:</strong> R$ {c.valorTotal}</p>}
+//                         </li>
+//                     ))}
+//                 </ul>
+//             </div>
+//         );
+//     };
+
+//     return (
+//         <section className="w-full h-full flex justify-between">
+//             <div className="w-full flex flex-col justify-start items-center">
+//                 <div className="mt-8 mb-6 w-80">
+//                     <label htmlFor="responsavelSelect" className="text-sm mb-2 block">Selecionar Responsável:</label>
+//                     <select
+//                         id="responsavelSelect"
+//                         className="w-full border border-gray-300 rounded px-2 py-1"
+//                         value={responsavelSelecionado || ""}
+//                         onChange={handleSelecionarResponsavel}
+//                     >
+//                         <option value="">-- Selecione um responsável --</option>
+//                         {responsaveis.map((resp) => (
+//                             <option key={resp.id} value={resp.id}>
+//                                 {resp.nome}
+//                             </option>
+//                         ))}
+//                     </select>
+//                 </div>
+
+//                 {responsavelSelecionado && renderContratosListados()}
+
+//                 {!contrato && (
+//                     <div className="text-center mt-8">
+//                         <p className="text-2xl text-[rgb(70,189,253)]">Nenhum contrato carregado</p>
+//                         <p className="text-sm text-[rgba(70,189,253,0.5)]">Selecione um responsável para iniciar</p>
+//                     </div>
+//                 )}
+
+//                 {contrato && (
+//                     <div className="flex justify-center items-start space-x-6 w-full h-full">
+//                         <div className="w-full max-w-100 h-full max-h-140 flex flex-col justify-start bg-white border border-gray-300 rounded-xl">
+//                             <InfoContrato contrato={contrato} setContrato={setContrato} />
+
+//                             <div className="px-4 pb-4">
+//                                 <label htmlFor="responsavelSelect" className="block text-sm mb-2">
+//                                     Selecionar outro Responsável:
+//                                 </label>
+//                                 <select
+//                                     id="responsavelSelect"
+//                                     className="w-full border border-gray-300 rounded px-2 py-1"
+//                                     value={responsavelSelecionado || ""}
+//                                     onChange={handleSelecionarResponsavel}
+//                                 >
+//                                     <option value="">-- Selecione um responsável --</option>
+//                                     {responsaveis.map((resp) => (
+//                                         <option key={resp.id} value={resp.id}>
+//                                             {resp.nome}
+//                                         </option>
+//                                     ))}
+//                                 </select>
+//                             </div>
+
+//                             <div className="p-4 space-x-4">
+//                                 <button
+//                                     onClick={enviarContratoEmail}
+//                                     disabled={contrato?.status === "enviado_para_responsavel" || contrato?.status === "assinado_pelo_responsavel"}
+//                                     className={`bg-green-600 text-white px-4 py-2 rounded ${contrato?.status === "enviado_para_responsavel" || contrato?.status === "assinado_pelo_responsavel" ? 'opacity-50 cursor-not-allowed' : ''}`}
+//                                 >
+//                                     Enviar Contrato por E-mail
+//                                 </button>
+
+//                                 {mongoId && (
+//                                     <button
+//                                         onClick={baixarPdf}
+//                                         className="bg-gray-700 text-white px-4 py-2 rounded"
+//                                     >
+//                                         Baixar PDF
+//                                     </button>
+//                                 )}
+//                             </div>
+//                         </div>
+
+//                         <div className="flex w-full h-full max-w-182">
+//                             <ContratoPreview contrato={contrato} />
+//                         </div>
+//                     </div>
+//                 )}
+//             </div>
+//         </section>
+//     );
+// }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-/* Imports */
+/* Components */
 import ContratoPreview from "./contratoPreview";
 import InfoContrato from "./infoContrato";
+import AssinarContratoMotorista from "./AssinarContratoMotorista";
+
+/* Services */
 import { getResponsaveis } from "../../../services/responsavelServices";
 
 export default function ContratoCondutor() {
-    const [contrato, setContrato] = useState(null);
-    const [mongoId, setMongoId] = useState(null);
+  const [contrato, setContrato] = useState(null);
+  const [mongoId, setMongoId] = useState(null);
 
-    const [responsaveis, setResponsaveis] = useState([]);
-    const [responsavelSelecionado, setResponsavelSelecionado] = useState(null);
+  const [responsaveis, setResponsaveis] = useState([]);
+  const [responsavelSelecionado, setResponsavelSelecionado] = useState("");
+  const [contratosResponsavel, setContratosResponsavel] = useState([]);
+  const [pendentes, setPendentes] = useState([]);
+  const [contratoPendenteSelecionado, setContratoPendenteSelecionado] = useState(null);
 
-    const [contratosResponsavel, setContratosResponsavel] = useState([]);
-    const [statusFiltro, setStatusFiltro] = useState(""); // PARA CASO QUEIRA FAZER CONSULTA POR FILTRO SEPARADA
+  useEffect(() => {
+    getResponsaveis()
+      .then(setResponsaveis)
+      .catch((err) => console.error("Erro ao buscar responsáveis:", err));
 
-    useEffect(() => {
-        getResponsaveis()
-            .then(setResponsaveis)
-            .catch((err) => console.error("Erro ao buscar responsáveis:", err));
-    }, []);
+    const token = localStorage.getItem("token");
 
-    const buscarContratosResponsavel = async (id, status = "") => {
-        try {
-            const params = { responsavelId: id };
-            if (status) params.status = status;
+    axios.get("http://localhost:1337/contrato/listar", {
+      params: {
+        motoristaId: localStorage.getItem("userId"),
+        status: "aguardando_assinatura_do_motorista",
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => setPendentes(res.data))
+      .catch((err) => console.error("Erro ao buscar contratos pendentes:", err));
+  }, []);
 
-            const response = await axios.get("http://localhost:1337/contrato/listar", { params });
-            setContratosResponsavel(response.data);
-        } catch (err) {
-            console.error("Erro ao buscar contratos:", err);
-        }
+  const buscarContratosResponsavel = async (id) => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await axios.get("http://localhost:1337/contrato/listar", {
+        params: { responsavelId: id },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setContratosResponsavel(response.data);
+    } catch (err) {
+      console.error("Erro ao buscar contratos:", err);
+    }
+  };
+
+  const handleSelecionarResponsavel = (e) => {
+    const id = e.target.value;
+    setResponsavelSelecionado(id);
+
+    const responsavel = responsaveis.find((r) => r.id == id);
+    if (!responsavel) return;
+
+    buscarContratosResponsavel(id);
+
+    const novoContrato = {
+      nomeCondutor: "",
+      contratado: [
+        {
+          nome: responsavel.nome,
+          endereco: responsavel.endereco || "",
+          numeroCasa: responsavel.numeroCasa || "",
+          bairro: responsavel.bairro || "",
+          cep: responsavel.cep || "",
+          cpf: responsavel.cpf || "",
+          rg: responsavel.rg || "",
+          telefone: responsavel.celular || "",
+        },
+      ],
+      assinado: false,
+      tipoTrajeto: 1,
+      formaPagamento: "",
+      valorTotal: "",
+      numeroParcelas: "",
+      valorParcela: "",
+      dataPagamento: "",
+      data: [
+        {
+          dia: null,
+          mes: "",
+          ano: null,
+        },
+      ],
+      Alunos: [],
     };
 
-    const handleSelecionarResponsavel = (e) => {
-        const id = e.target.value;
-        setResponsavelSelecionado(id);
+    setContrato(novoContrato);
+  };
 
-        const responsavel = responsaveis.find((r) => r.id == id);
-        if (!responsavel) return;
+  // const enviarContratoEmail = async () => {
+  //   if (!contrato || !responsavelSelecionado)
+  //     return alert("Preencha o contrato e selecione um responsável.");
 
-        buscarContratosResponsavel(id);
+  //   const idMotorista = localStorage.getItem("userId");
+  //   const token = localStorage.getItem("token");
 
-        const novoContrato = {
-            nomeCondutor: "",
-            contratado: [
-                {
-                    nome: responsavel.nome,
-                    endereco: responsavel.endereco || "",
-                    numeroCasa: responsavel.numeroCasa || "",
-                    bairro: responsavel.bairro || "",
-                    cep: responsavel.cep || "",
-                    cpf: responsavel.cpf || "",
-                    rg: responsavel.rg || "",
-                    telefone: responsavel.celular || "",
-                },
-            ],
-            assinado: false,
-            tipoTrajeto: 1,
-            formaPagamento: "",
-            valorTotal: "",
-            numeroParcelas: "",
-            valorParcela: "",
-            dataPagamento: "",
-            data: [
-                {
-                    dia: null,
-                    mes: "",
-                    ano: null,
-                },
-            ],
-            Alunos: [],
-        };
+  //   try {
+  //     const response = await axios.post(
+  //       "http://localhost:1337/relatorio/enviar-email",
+  //       {
+  //         contrato,
+  //         idResponsavel: responsavelSelecionado,
+  //         idMotorista,
+  //       },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
 
-        setContrato(novoContrato);
-    };
+  //     setMongoId(response.data.mongoPdfId);
+  //     alert("Contrato enviado por e-mail com sucesso!");
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Erro ao enviar contrato por e-mail.");
+  //   }
+  // };
 
-    const enviarContratoEmail = async () => {
-        if (!contrato || !responsavelSelecionado) return alert("Preencha o contrato e selecione um responsável.");
+  const enviarContratoEmail = async () => {
+    if (!contrato || !responsavelSelecionado) {
+      alert("Preencha o contrato e selecione um responsável.");
+      return;
+    }
 
-        try {
-            const response = await axios.post("http://localhost:1337/relatorio/enviar-email", {
-                contrato,
-                idResponsavel: responsavelSelecionado
-            });
+    const idMotorista = localStorage.getItem("userId");
+    const token = localStorage.getItem("token");
 
-            setMongoId(response.data.mongoId);
-            alert("Contrato enviado por e-mail com sucesso!");
-        } catch (err) {
-            console.error(err);
-            alert("Erro ao enviar contrato por e-mail.");
-        }
-    };
+    console.log("Token para envio:", token);
 
-    const baixarPdf = () => {
-        if (!mongoId) return;
-        window.open(`http://localhost:1337/relatorio/baixar/${mongoId}`, "_blank");
-    };
+    if (!token) {
+      alert("Token de autenticação não encontrado. Faça login novamente.");
+      return;
+    }
 
-    const renderContratosListados = () => {
-        if (!contratosResponsavel.length) return null;
+    try {
+      const response = await axios.post(
+        "http://localhost:1337/relatorio/enviar-email",
+        { contrato, idResponsavel: responsavelSelecionado, idMotorista },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMongoId(response.data.mongoPdfId);
+      alert("Contrato enviado por e-mail com sucesso!");
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao enviar contrato por e-mail.");
+    }
+  };
 
-        return (
-            <div className="my-6 w-full max-w-3xl mx-auto">
-                <h3 className="text-xl font-bold mb-3 text-gray-800">Contratos existentes deste responsável:</h3>
-                <ul className="space-y-3">
-                    {contratosResponsavel.map((c) => (
-                        <li key={c._id} className="border rounded p-4 shadow-sm bg-white">
-                            <p><strong>Status:</strong> {c.status || "Sem status"}</p>
-                            <p><strong>Criado em:</strong> {new Date(c.dataCriacao).toLocaleDateString()}</p>
-                            {c.valorTotal && <p><strong>Valor Total:</strong> R$ {c.valorTotal}</p>}
-                        </li>
-                    ))}
-                </ul>
-            </div>
-        );
-    };
+  const baixarPdf = () => {
+    if (!mongoId) return;
+    window.open(`http://localhost:1337/relatorio/baixar/${mongoId}`, "_blank");
+  };
 
-    return (
-        <section className="w-full h-full flex justify-between">
-            <div className="w-full flex flex-col justify-start items-center">
-                <div className="mt-8 mb-6 w-80">
-                    <label htmlFor="responsavelSelect" className="text-sm mb-2 block">Selecionar Responsável:</label>
-                    <select
-                        id="responsavelSelect"
-                        className="w-full border border-gray-300 rounded px-2 py-1"
-                        value={responsavelSelecionado || ""}
-                        onChange={handleSelecionarResponsavel}
-                    >
-                        <option value="">-- Selecione um responsável --</option>
-                        {responsaveis.map((resp) => (
-                            <option key={resp.id} value={resp.id}>
-                                {resp.nome}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {responsavelSelecionado && renderContratosListados()}
-
-                {!contrato && (
-                    <div className="text-center mt-8">
-                        <p className="text-2xl text-[rgb(70,189,253)]">Nenhum contrato carregado</p>
-                        <p className="text-sm text-[rgba(70,189,253,0.5)]">Selecione um responsável para iniciar</p>
-                    </div>
-                )}
-
-                {contrato && (
-                    <div className="flex justify-center items-start space-x-6 w-full h-full">
-                        <div className="w-full max-w-100 h-full max-h-140 flex flex-col justify-start bg-white border border-gray-300 rounded-xl">
-                            <InfoContrato contrato={contrato} setContrato={setContrato} />
-
-                            <div className="px-4 pb-4">
-                                <label htmlFor="responsavelSelect" className="block text-sm mb-2">
-                                    Selecionar outro Responsável:
-                                </label>
-                                <select
-                                    id="responsavelSelect"
-                                    className="w-full border border-gray-300 rounded px-2 py-1"
-                                    value={responsavelSelecionado || ""}
-                                    onChange={handleSelecionarResponsavel}
-                                >
-                                    <option value="">-- Selecione um responsável --</option>
-                                    {responsaveis.map((resp) => (
-                                        <option key={resp.id} value={resp.id}>
-                                            {resp.nome}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="p-4 space-x-4">
-                                <button
-                                    onClick={enviarContratoEmail}
-                                    disabled={contrato?.status === "enviado_para_responsavel" || contrato?.status === "assinado_pelo_responsavel"}
-                                    className={`bg-green-600 text-white px-4 py-2 rounded ${contrato?.status === "enviado_para_responsavel" || contrato?.status === "assinado_pelo_responsavel" ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    Enviar Contrato por E-mail
-                                </button>
-
-                                {mongoId && (
-                                    <button
-                                        onClick={baixarPdf}
-                                        className="bg-gray-700 text-white px-4 py-2 rounded"
-                                    >
-                                        Baixar PDF
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="flex w-full h-full max-w-182">
-                            <ContratoPreview contrato={contrato} />
-                        </div>
-                    </div>
-                )}
-            </div>
-        </section>
+  const renderContratosListados = () =>
+    contratosResponsavel.length > 0 && (
+      <div className="my-6 w-full max-w-3xl mx-auto">
+        <h3 className="text-xl font-bold mb-3 text-gray-800">
+          Contratos existentes deste responsável:
+        </h3>
+        <ul className="space-y-3">
+          {contratosResponsavel.map((c) => (
+            <li key={c._id} className="border rounded p-4 shadow-sm bg-white">
+              <p>
+                <strong>Status:</strong> {c.status || "Sem status"}
+              </p>
+              <p>
+                <strong>Criado em:</strong>{" "}
+                {new Date(c.dataCriacao).toLocaleDateString()}
+              </p>
+              {c.valorTotal && (
+                <p>
+                  <strong>Valor Total:</strong> R$ {c.valorTotal}
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
     );
+
+  return (
+    <section className="w-full h-full flex justify-between">
+      <div className="w-full flex flex-col justify-start items-center">
+        <div className="mt-8 mb-6 w-80">
+          <label htmlFor="responsavelSelect1" className="text-sm mb-2 block">
+            Selecionar Responsável:
+          </label>
+          <select
+            id="responsavelSelect1"
+            className="w-full border border-gray-300 rounded px-2 py-1"
+            value={responsavelSelecionado || ""}
+            onChange={handleSelecionarResponsavel}
+          >
+            <option value="">-- Selecione um responsável --</option>
+            {responsaveis.map((resp) => (
+              <option key={resp.id} value={resp.id}>
+                {resp.nome}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {pendentes.length > 0 && (
+          <div className="mb-6 w-80">
+            <label htmlFor="pendenteSelect" className="text-sm mb-2 block">
+              Contratos pendentes para sua assinatura:
+            </label>
+            <select
+              id="pendenteSelect"
+              className="w-full border border-gray-300 rounded px-2 py-1"
+              value={contratoPendenteSelecionado?._id || ""}
+              onChange={(e) => {
+                const contrato = pendentes.find((p) => p._id === e.target.value);
+                setContratoPendenteSelecionado(contrato);
+              }}
+            >
+              <option value="">-- Selecione um contrato pendente --</option>
+              {pendentes.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {new Date(c.dataCriacao).toLocaleDateString()} -{" "}
+                  {c.contrato?.contratado?.[0]?.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {contratoPendenteSelecionado && (
+          <AssinarContratoMotorista
+            contrato={contratoPendenteSelecionado}
+            onAssinar={(idAssinado) => {
+              setPendentes((prev) => prev.filter((c) => c._id !== idAssinado));
+              setContratoPendenteSelecionado(null);
+            }}
+            onCancelar={() => setContratoPendenteSelecionado(null)}
+          />
+        )}
+
+        {!contrato && !contratoPendenteSelecionado && (
+          <div className="text-center mt-8">
+            <p className="text-2xl text-[rgb(70,189,253)]">Nenhum contrato carregado</p>
+            <p className="text-sm text-[rgba(70,189,253,0.5)]">
+              Selecione um responsável ou contrato pendente
+            </p>
+          </div>
+        )}
+
+        {contrato && !contratoPendenteSelecionado && (
+          <div className="flex justify-center items-start space-x-6 w-full h-full">
+            <div className="w-full max-w-100 h-full max-h-140 flex flex-col justify-start bg-white border border-gray-300 rounded-xl">
+              <InfoContrato contrato={contrato} setContrato={setContrato} />
+              <div className="px-4 pb-4">
+                <label htmlFor="responsavelSelect2" className="block text-sm mb-2">
+                  Selecionar outro Responsável:
+                </label>
+                <select
+                  id="responsavelSelect2"
+                  className="w-full border border-gray-300 rounded px-2 py-1"
+                  value={responsavelSelecionado || ""}
+                  onChange={handleSelecionarResponsavel}
+                >
+                  <option value="">-- Selecione um responsável --</option>
+                  {responsaveis.map((resp) => (
+                    <option key={resp.id} value={resp.id}>
+                      {resp.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="p-4 space-x-4">
+                <button
+                  onClick={enviarContratoEmail}
+                  disabled={
+                    contrato?.status === "enviado_para_responsavel" ||
+                    contrato?.status === "assinado_pelo_responsavel"
+                  }
+                  className={`bg-green-600 text-white px-4 py-2 rounded ${contrato?.status === "enviado_para_responsavel" ||
+                    contrato?.status === "assinado_pelo_responsavel"
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                    }`}
+                >
+                  Enviar Contrato por E-mail
+                </button>
+                {mongoId && (
+                  <button
+                    onClick={baixarPdf}
+                    className="bg-gray-700 text-white px-4 py-2 rounded"
+                  >
+                    Baixar PDF
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="flex w-full h-full max-w-182">
+              <ContratoPreview contrato={contrato} />
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
 }

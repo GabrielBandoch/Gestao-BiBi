@@ -15,18 +15,16 @@ module.exports.routes = {
   // ============================
   'POST /relatorio/assinar': 'RelatorioController.assinar',
   'POST /relatorio/assinarResponsavel': 'RelatorioController.assinarResponsavel',
-
   'POST /relatorio/verificar': 'RelatorioController.verificarAssinatura',
   'GET /relatorio/baixar/:mongoId': 'RelatorioController.baixar',
   'POST /relatorio/enviar-email': 'RelatorioController.enviarEmail',
   'GET /api/usuario/responsaveis': 'UserController.listarResponsaveis',
-  'GET /contratos': 'Contrato.listar',
+  'GET /contrato/listar': 'ContratoController.listar',
+  'GET /contrato/pendentes': 'RelatorioController.listarPendentesMotorista',
+  'POST /contrato/assinar-final': 'RelatorioController.assinarFinalMotorista',
 
-  // ============================
-  // AUTENTICAÇÃO E USUÁRIOS
-  // ============================
+  // Autenticação
   'POST /auth/register': 'User.register',
   'POST /auth/login': 'User.login',
   'GET /auth/me': 'User.me',
-
 };

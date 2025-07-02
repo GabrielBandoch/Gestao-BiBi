@@ -16,7 +16,10 @@ async function salvarContrato(dados) {
 }
 
 module.exports = {
+
   assinar: async function (req, res) {
+    let client;
+
     try {
       const { contrato, idResponsavel } = req.body;
 
@@ -24,13 +27,16 @@ module.exports = {
         return res.status(400).json({ erro: 'Contrato não fornecido.' });
       }
 
-      // gera o PDF inicial com a assinatura do motorista
+      if (!req.usuario?.id) {
+        return res.status(401).json({ erro: 'Usuário não autenticado.' });
+      }
+
       const { pdfBuffer, hash } = await PdfService.gerarPdf(contrato);
       const mongoPdfId = await MongoService.salvarPdf(pdfBuffer, `relatorio-${Date.now()}.pdf`);
 
-      // salva no Mongo
       const contratoId = await salvarContrato({
         responsavelId: idResponsavel,
+        motoristaId: req.usuario.id,
         pdfId: mongoPdfId,
         status: "enviado_para_responsavel",
         dataCriacao: new Date(),
@@ -58,7 +64,6 @@ module.exports = {
         return res.status(400).json({ erro: 'Dados insuficientes para assinar.' });
       }
 
-      // busca o PDF original salvo pelo motorista
       const bufferOriginal = await MongoService.buscarPdf(mongoId);
       const { valido, hash } = await PdfService.validarPdf(bufferOriginal);
 
@@ -66,7 +71,6 @@ module.exports = {
         return res.status(400).json({ mensagem: 'Assinatura do motorista inválida.' });
       }
 
-      // adiciona a assinatura do responsável
       const bufferAssinado = await PdfService.assinarPorResponsavel(bufferOriginal, assinaturaResponsavel);
       const novoPdfId = await MongoService.salvarPdf(bufferAssinado, `relatorio-assinado-${Date.now()}.pdf`);
 
@@ -98,6 +102,8 @@ module.exports = {
   },
 
   enviarEmail: async function (req, res) {
+    let client;
+
     try {
       const { contrato, idResponsavel } = req.body;
 
@@ -105,31 +111,32 @@ module.exports = {
         return res.status(400).json({ erro: 'Contrato e id do responsável são obrigatórios.' });
       }
 
-      // Gera o PDF
-      const { pdfBuffer, hash } = await PdfService.gerarPdf(contrato);
+      if (!req.usuario?.id) {
+        return res.status(401).json({ erro: 'Usuário não autenticado.' });
+      }
 
-      // Salva PDF no MongoDB
+      const idMotorista = req.usuario.id;
+
+      const { pdfBuffer, hash } = await PdfService.gerarPdf(contrato);
       const mongoPdfId = await MongoService.salvarPdf(pdfBuffer, `contrato-${Date.now()}.pdf`);
 
-      // Salva contrato no MongoDB
-      const client = await MongoClient.connect(mongoUrl);
+      client = await MongoClient.connect(mongoUrl);
       const db = client.db(dbName);
+
       const contratoId = await db.collection('contratos').insertOne({
         responsavelId: idResponsavel,
+        motoristaId: idMotorista,
         pdfId: mongoPdfId,
         status: "enviado_para_responsavel",
         dataCriacao: new Date(),
         contrato
       }).then(result => result.insertedId.toHexString());
-      client.close();
 
-      // Busca o e-mail do responsável no relacional
       const responsavel = await User.findOne({ id: idResponsavel });
       if (!responsavel) {
         return res.status(404).json({ erro: 'Responsável não encontrado.' });
       }
 
-      // Envia o e-mail
       await EmailService.enviar({
         to: responsavel.email,
         subject: 'Novo contrato para assinatura',
@@ -148,58 +155,172 @@ module.exports = {
     } catch (err) {
       console.error('💥 Erro em enviarEmail:', err);
       return res.serverError('Erro ao enviar o contrato por e-mail.');
+    } finally {
+      if (client) client.close();
     }
   },
 
   assinarResponsavel: async function (req, res) {
-    try {
-      const { contratoId, nomeResponsavel } = req.body;
+    let client;
 
-      if (!contratoId || !nomeResponsavel) {
-        return res.status(400).json({ erro: 'ContratoId e nome do responsável são obrigatórios.' });
+    try {
+      const { contratoId, nomeResponsavel, contratoAtualizado } = req.body;
+
+      if (!contratoId || !nomeResponsavel || !contratoAtualizado) {
+        return res.status(400).json({ erro: 'ContratoId, nome do responsável e contrato atualizado são obrigatórios.' });
       }
 
-      // Buscar contrato no Mongo
-      const client = await MongoClient.connect(mongoUrl);
+      client = await MongoClient.connect(mongoUrl);
       const db = client.db(dbName);
+
       const contratoDoc = await db.collection('contratos').findOne({ _id: new ObjectId(contratoId) });
 
       if (!contratoDoc) {
-        client.close();
         return res.status(404).json({ erro: 'Contrato não encontrado.' });
       }
 
-      // Buscar PDF original
       const bufferOriginal = await MongoService.buscarPdf(contratoDoc.pdfId);
+      const validacao = await PdfService.validarPdf(bufferOriginal);
 
-      // Validar assinatura do motorista
-      const { valido, hash } = await PdfService.validarPdf(bufferOriginal);
-      if (!valido) {
-        client.close();
+      if (!validacao.valido) {
         return res.status(400).json({ mensagem: 'Assinatura do motorista inválida.' });
       }
 
-      // Assinar PDF pelo responsável
-      const bufferAssinado = await PdfService.assinarPorResponsavel(bufferOriginal, nomeResponsavel);
+      // 🔧 Gera novo PDF com assinatura do responsável
+      const { pdfBuffer: bufferAssinado, hash: novoHash } = await PdfService.gerarPdf(contratoAtualizado);
       const novoPdfId = await MongoService.salvarPdf(bufferAssinado, `contrato-assinado-${Date.now()}.pdf`);
 
-      // Atualizar o contrato no Mongo
       await db.collection('contratos').updateOne(
         { _id: contratoDoc._id },
-        { $set: { status: "assinado_pelo_responsavel", pdfId: novoPdfId, dataAssinaturaResponsavel: new Date() } }
+        {
+          $set: {
+            status: "aguardando_assinatura_do_motorista",
+            pdfId: novoPdfId,
+            dataAssinaturaResponsavel: new Date(),
+            contrato: contratoAtualizado 
+          }
+        }
       );
-      client.close();
+
+      console.log("📨 Buscando motorista pelo id:", contratoDoc.motoristaId);
+      const motorista = await User.findOne({ where: { id: contratoDoc.motoristaId } });
+
+
+      if (motorista) {
+        await EmailService.enviar({
+          to: motorista.email,
+          subject: 'Contrato aguardando sua assinatura',
+          text: `Olá ${motorista.nome},\n\nO responsável assinou o contrato. Agora falta sua assinatura final.`,
+          buffer: bufferAssinado,
+          filename: 'contrato-assinado.pdf'
+        });
+      }
 
       return res.json({
         mensagem: 'Contrato assinado pelo responsável com sucesso!',
         novoPdfId,
-        hash
+        hash: novoHash
       });
 
     } catch (err) {
       console.error('💥 Erro em assinarResponsavel:', err);
       return res.serverError('Erro ao assinar contrato pelo responsável.');
+    } finally {
+      if (client) client.close();
+    }
+  },
+
+  assinarFinalMotorista: async function (req, res) {
+    let client;
+
+    try {
+      const { contratoId, nomeMotorista } = req.body;
+
+      if (!contratoId || !nomeMotorista) {
+        return res.status(400).json({ erro: 'ContratoId e nome do motorista são obrigatórios.' });
+      }
+
+      client = await MongoClient.connect(mongoUrl);
+      const db = client.db(dbName);
+
+      const contratoDoc = await db.collection('contratos').findOne({ _id: new ObjectId(contratoId) });
+
+      if (!contratoDoc) {
+        return res.status(404).json({ erro: 'Contrato não encontrado.' });
+      }
+
+      if (contratoDoc.status !== 'aguardando_assinatura_do_motorista') {
+        return res.status(400).json({ erro: 'O contrato não está pronto para assinatura final do motorista.' });
+      }
+
+      // Recupera o PDF assinado pelo responsável
+      const bufferAnterior = await MongoService.buscarPdf(contratoDoc.pdfId);
+
+      // Adiciona a assinatura final do motorista
+      const pdfFinal = await PdfService.assinarPorResponsavel(bufferAnterior, nomeMotorista); // pode renomear função depois
+
+      const finalPdfId = await MongoService.salvarPdf(pdfFinal, `contrato-final-${Date.now()}.pdf`);
+
+      await db.collection('contratos').updateOne(
+        { _id: contratoDoc._id },
+        {
+          $set: {
+            status: "completo",
+            pdfId: finalPdfId,
+            dataAssinaturaFinal: new Date()
+          }
+        }
+      );
+
+      const responsavel = await User.findOne({ id: contratoDoc.responsavelId });
+
+      if (responsavel) {
+        await EmailService.enviar({
+          to: responsavel.email,
+          subject: 'Contrato finalizado com sucesso',
+          text: `Olá ${responsavel.nome},\n\nO motorista ${nomeMotorista} finalizou o contrato. Ele está agora completo.`,
+          buffer: pdfFinal,
+          filename: 'contrato-finalizado.pdf'
+        });
+      }
+
+      return res.json({
+        mensagem: 'Contrato assinado e finalizado com sucesso!',
+        finalPdfId
+      });
+
+    } catch (err) {
+      console.error('💥 Erro em assinarFinalMotorista:', err);
+      return res.serverError('Erro ao finalizar o contrato.');
+    } finally {
+      if (client) client.close();
+    }
+  },
+
+  listarPendentesMotorista: async function (req, res) {
+    try {
+      const { motoristaId } = req.query;
+
+      if (!motoristaId) {
+        return res.status(400).json({ erro: 'motoristaId é obrigatório.' });
+      }
+
+      const client = await MongoClient.connect(mongoUrl);
+      const db = client.db(dbName);
+
+      const contratos = await db.collection('contratos')
+        .find({ motoristaId, status: 'aguardando_assinatura_do_motorista' })
+        .sort({ dataCriacao: -1 })
+        .toArray();
+
+      client.close();
+      return res.json(contratos);
+
+    } catch (err) {
+      console.error('Erro ao listar contratos pendentes do motorista:', err);
+      return res.serverError('Erro interno ao listar contratos.');
     }
   }
+
 
 };

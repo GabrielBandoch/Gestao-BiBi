@@ -10,15 +10,26 @@
 
 module.exports.policies = {
 
-  /***************************************************************************
-  *                                                                          *
-  * Default policy for all controllers and actions, unless overridden.       *
-  * (`true` allows public access)                                            *
-  *                                                                          *
-  ***************************************************************************/
 
   // '*': true,
   UserController: {
     me: 'Middleware'
-  }
+  },
+
+
+  RelatorioController: {
+    assinar: 'Middleware',
+    assinarResponsavel: 'Middleware',
+    verificarAssinatura: 'Middleware',
+    baixar: 'Middleware',
+    enviarEmail: 'Middleware',
+    listarPendentesMotorista: 'Middleware',
+    assinarFinalMotorista: 'Middleware',
+  },
+
+  ContratoController: {
+    listar: 'Middleware',
+  },
+
+
 };
