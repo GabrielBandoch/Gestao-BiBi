@@ -12,11 +12,16 @@ export default function AssinarContratoMotorista({ contrato, onAssinar, onCancel
       alert("Digite seu nome para assinar o contrato.");
       return;
     }
-
+  const token = localStorage.getItem("token");
+  console.log("Token recuperado:", token);
     try {
       await axios.post("http://localhost:1337/contrato/assinar-final", {
         contratoId: contrato._id,
         nomeMotorista,
+      }, {
+              headers: {
+        Authorization: `Bearer ${token}`
+      }
       });
 
       alert("Contrato assinado com sucesso!");

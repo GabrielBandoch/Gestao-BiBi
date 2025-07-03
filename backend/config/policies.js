@@ -21,7 +21,6 @@ module.exports.policies = {
     assinar: 'Middleware',
     assinarResponsavel: 'Middleware',
     verificarAssinatura: 'Middleware',
-    baixar: 'Middleware',
     enviarEmail: 'Middleware',
     listarPendentesMotorista: 'Middleware',
     assinarFinalMotorista: 'Middleware',

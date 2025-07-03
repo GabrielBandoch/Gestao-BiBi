@@ -162,34 +162,60 @@ module.exports = {
 
   assinarResponsavel: async function (req, res) {
     let client;
-
     try {
-      const { contratoId, nomeResponsavel, contratoAtualizado } = req.body;
+      const { contratoId, contratoAtualizado } = req.body;
 
-      if (!contratoId || !nomeResponsavel || !contratoAtualizado) {
+      console.log("🔍 BODY recebido:", req.body);
+
+      if (!contratoId || !contratoAtualizado) {
         return res.status(400).json({ erro: 'ContratoId, nome do responsável e contrato atualizado são obrigatórios.' });
       }
+
+      const assinaturaResponsavel = contratoAtualizado.assinaturaResponsavel;
+      if (!assinaturaResponsavel) {
+        return res.status(400).json({ erro: 'Assinatura do responsável não informada.' });
+      }
+
+      // Monta contrato seguro
+      const contratoSafe = {
+        nomeCondutor: contratoAtualizado.nomeCondutor || "Não informado",
+        contratado: contratoAtualizado.contratado || [],
+        assinado: contratoAtualizado.assinado ?? false,
+        tipoTrajeto: contratoAtualizado.tipoTrajeto ?? 1,
+        formaPagamento: contratoAtualizado.formaPagamento || "A combinar",
+        valorTotal: contratoAtualizado.valorTotal || "0,00",
+        numeroParcelas: contratoAtualizado.numeroParcelas || "1",
+        valorParcela: contratoAtualizado.valorParcela || "0,00",
+        dataPagamento: contratoAtualizado.dataPagamento || "A definir",
+        data: (contratoAtualizado.data || []).map(d => ({
+          dia: d.dia ?? 1,
+          mes: d.mes || "Janeiro",
+          ano: d.ano ?? 2025
+        })),
+        Alunos: contratoAtualizado.Alunos || [],
+        assinaturaResponsavel // <- salva assinatura separada do nome
+      };
 
       client = await MongoClient.connect(mongoUrl);
       const db = client.db(dbName);
 
       const contratoDoc = await db.collection('contratos').findOne({ _id: new ObjectId(contratoId) });
-
       if (!contratoDoc) {
         return res.status(404).json({ erro: 'Contrato não encontrado.' });
       }
 
+      // Valida PDF antigo
       const bufferOriginal = await MongoService.buscarPdf(contratoDoc.pdfId);
       const validacao = await PdfService.validarPdf(bufferOriginal);
-
       if (!validacao.valido) {
         return res.status(400).json({ mensagem: 'Assinatura do motorista inválida.' });
       }
 
-      // 🔧 Gera novo PDF com assinatura do responsável
-      const { pdfBuffer: bufferAssinado, hash: novoHash } = await PdfService.gerarPdf(contratoAtualizado);
+      // Gera novo PDF com assinatura
+      const { pdfBuffer: bufferAssinado, hash: novoHash } = await PdfService.gerarPdf(contratoSafe);
       const novoPdfId = await MongoService.salvarPdf(bufferAssinado, `contrato-assinado-${Date.now()}.pdf`);
 
+      // Atualiza banco
       await db.collection('contratos').updateOne(
         { _id: contratoDoc._id },
         {
@@ -197,23 +223,18 @@ module.exports = {
             status: "aguardando_assinatura_do_motorista",
             pdfId: novoPdfId,
             dataAssinaturaResponsavel: new Date(),
-            contrato: {
-              ...contratoAtualizado,
-              nomeResponsavel
-            }
+            contrato: contratoSafe
           }
         }
       );
+      const nomeResponsavel = contratoSafe.contratado?.[0]?.nome || "Responsável";
 
-      console.log("📨 Buscando motorista pelo id:", contratoDoc.motoristaId);
       const motorista = await User.findOne({ where: { id: contratoDoc.motoristaId } });
-
-
       if (motorista) {
         await EmailService.enviar({
           to: motorista.email,
           subject: 'Contrato aguardando sua assinatura',
-          text: `Olá ${motorista.nome},\n\nO responsável assinou o contrato. Agora falta sua assinatura final.`,
+          text: `Olá ${motorista.nome},\n\nO responsável ${nomeResponsavel} assinou o contrato.`,
           buffer: bufferAssinado,
           filename: 'contrato-assinado.pdf'
         });
@@ -229,7 +250,7 @@ module.exports = {
       console.error('💥 Erro em assinarResponsavel:', err);
       return res.serverError('Erro ao assinar contrato pelo responsável.');
     } finally {
-      if (client) client.close();
+      if (client) await client.close();
     }
   },
 
@@ -256,27 +277,31 @@ module.exports = {
         return res.status(400).json({ erro: 'O contrato não está pronto para assinatura final do motorista.' });
       }
 
-      // Recupera o PDF assinado pelo responsável
-      const bufferAnterior = await MongoService.buscarPdf(contratoDoc.pdfId);
+      // Monta o contrato final, adicionando o nome do motorista
+      const contratoCompleto = {
+        ...contratoDoc.contrato,
+        nomeMotorista
+      };
 
-      // Adiciona a assinatura final do motorista
-      const pdfFinal = await PdfService.assinarPorResponsavel(bufferAnterior, nomeMotorista); // pode renomear função depois
-
+      // Gera o PDF final com o nome do responsável e do motorista nas linhas certas
+      const { pdfBuffer: pdfFinal, hash: hashFinal } = await PdfService.gerarPdf(contratoCompleto);
       const finalPdfId = await MongoService.salvarPdf(pdfFinal, `contrato-final-${Date.now()}.pdf`);
 
+      // Atualiza o documento no Mongo
       await db.collection('contratos').updateOne(
         { _id: contratoDoc._id },
         {
           $set: {
             status: "completo",
             pdfId: finalPdfId,
-            dataAssinaturaFinal: new Date()
+            dataAssinaturaFinal: new Date(),
+            contrato: contratoCompleto
           }
         }
       );
 
+      // Envia o e-mail para o responsável avisando
       const responsavel = await User.findOne({ id: contratoDoc.responsavelId });
-
       if (responsavel) {
         await EmailService.enviar({
           to: responsavel.email,
@@ -296,9 +321,10 @@ module.exports = {
       console.error('💥 Erro em assinarFinalMotorista:', err);
       return res.serverError('Erro ao finalizar o contrato.');
     } finally {
-      if (client) client.close();
+      if (client) await client.close();
     }
   },
+
 
   listarPendentesMotorista: async function (req, res) {
     try {
